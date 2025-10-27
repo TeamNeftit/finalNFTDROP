@@ -1,13 +1,22 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/server.js"
+      "source": "/api/:path*",
+      "destination": "/api/[...path]"
     },
     {
-      "source": "/auth/(.*)",
-      "destination": "/server.js"
+      "source": "/auth/:path*",
+      "destination": "/api/[...path]"
     }
   ]
 }
