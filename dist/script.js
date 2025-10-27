@@ -35,6 +35,18 @@ document.addEventListener('DOMContentLoaded', function() {
     updateProgress();
 });
 
+// Handle browser back/forward button - reload state when page is restored from cache
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        // Page was restored from bfcache (back/forward cache)
+        console.log('🔄 Page restored from cache - reloading state...');
+        loadTaskStates();
+        checkExistingConnections();
+        loadParticipantCount();
+        updateProgress();
+    }
+});
+
 // Load participant count from server
 async function loadParticipantCount() {
     console.log('📊 Loading participant count...');
