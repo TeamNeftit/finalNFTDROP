@@ -1,3 +1,7 @@
+// Import the Express app
 const app = require('../server');
 
-module.exports = app;
+// Export as Vercel serverless function
+module.exports = (req, res) => {
+    return app(req, res);
+};
