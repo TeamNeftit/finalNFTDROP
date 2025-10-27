@@ -1,8 +1,21 @@
 import './Home.css'
 import { useState, useEffect } from 'react';
 import { Info, Copy } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 function Home() {
+  const location = useLocation();
+  
+  // Force a full reload when returning to home via browser back/forward
+  // so legacy globals re-run and state/UI are fresh
+  useEffect(() => {
+    const nav = performance.getEntriesByType('navigation')[0];
+    if (location.pathname === '/' && nav && nav.type === 'back_forward') {
+      console.log('🔁 Back/forward navigation to home detected - reloading for fresh state');
+      window.location.reload();
+    }
+  }, [location.pathname]);
+ 
   // Helper to call legacy globals safely
   const call = (fn) => () => {
     if (typeof window[fn] === 'function') {
