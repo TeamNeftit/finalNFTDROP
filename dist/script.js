@@ -36,19 +36,29 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadParticipantCount() {
     console.log('📊 Loading participant count...');
     
+    const countElement = document.getElementById('total-participants');
+    if (!countElement) {
+        console.error('❌ Participant count element not found');
+        return;
+    }
+    
     try {
-        const response = await fetch('/api/participant-count');
+        const response = await fetch('/api/participant-count', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
         console.log('📊 Response status:', response.status);
+        console.log('📊 Response URL:', response.url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         
         const data = await response.json();
         console.log('📊 Response data:', data);
-        
-        const countElement = document.getElementById('total-participants');
-        
-        if (!countElement) {
-            console.error('❌ Participant count element not found');
-            return;
-        }
         
         if (data.success && data.count !== undefined) {
             // Animate the count
@@ -63,11 +73,9 @@ async function loadParticipantCount() {
         }
     } catch (error) {
         console.error('❌ Error loading participant count:', error);
+        console.error('❌ Error details:', error.message);
         // Set default count on error
-        const countElement = document.getElementById('total-participants');
-        if (countElement) {
-            countElement.textContent = '0';
-        }
+        countElement.textContent = '0';
     }
 }
 
@@ -91,8 +99,22 @@ function animateCount(element, start, end, duration) {
 // Load configuration from server
 async function loadConfig() {
     try {
-        const response = await fetch('/api/config');
+        const response = await fetch('/api/config', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log('🔧 Config response status:', response.status);
+        console.log('🔧 Config response URL:', response.url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const config = await response.json();
+        console.log('🔧 Config loaded:', config);
         
         if (config.discordInviteLink) {
             DISCORD_INVITE_LINK = config.discordInviteLink;
@@ -123,7 +145,11 @@ async function loadConfig() {
             console.log('⚠️ Could not clear Discord cache:', error);
         }
     } catch (error) {
-        console.log('⚠️ Could not load config from server, using default values');
+        console.error('⚠️ Could not load config from server:', error);
+        console.error('⚠️ Error details:', error.message);
+        console.log('⚠️ Using default values');
+        console.log('⚠️ Current BASE_URL:', BASE_URL);
+        console.log('⚠️ Current window.location.origin:', window.location.origin);
     }
 }
 
