@@ -16,6 +16,9 @@ let DISCORD_GUILD_ID = null; // Will be loaded from server
 let BASE_URL = window.location.origin;
 let NEFTIT_USERNAME = 'neftitxyz'; // Default fallback
 
+// API Backend URL - Railway deployment
+const API_URL = window.API_BACKEND_URL || window.location.origin;
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 NFT Drop page loaded - SCRIPT VERSION 3');
@@ -43,7 +46,7 @@ async function loadParticipantCount() {
     }
     
     try {
-        const response = await fetch('/api/participant-count', {
+        const response = await fetch(`${API_URL}/api/participant-count`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json'
@@ -99,7 +102,7 @@ function animateCount(element, start, end, duration) {
 // Load configuration from server
 async function loadConfig() {
     try {
-        const response = await fetch('/api/config', {
+        const response = await fetch(`${API_URL}/api/config`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json'
@@ -139,7 +142,7 @@ async function loadConfig() {
         
         // Clear any cached Discord data to force fresh check
         try {
-            await fetch('/api/discord-clear-cache', { method: 'POST' });
+            await fetch(`${API_URL}/api/discord-clear-cache`, { method: 'POST' });
             console.log('🧹 Cleared Discord verification cache');
         } catch (error) {
             console.log('⚠️ Could not clear Discord cache:', error);
@@ -750,14 +753,15 @@ async function authenticateX() {
     
     // Open X OAuth2 in popup
     const popup = window.open(
-        `${BASE_URL}/auth/x`,
+        `${API_URL}/auth/x`,
         'xAuth',
         'width=600,height=700,scrollbars=yes,resizable=yes'
     );
     
     // Listen for popup messages
     const messageListener = async (event) => {
-        if (event.origin !== BASE_URL) return;
+        // Accept messages from both frontend and backend
+        if (event.origin !== BASE_URL && event.origin !== API_URL) return;
         
         if (event.data.type === 'X_AUTH_SUCCESS') {
             console.log('🎉 X OAuth SUCCESS received');
@@ -769,7 +773,7 @@ async function authenticateX() {
             
             // Link Twitter to existing Discord session
             try {
-                const response = await fetch('/api/link-twitter-to-session', {
+                const response = await fetch(`${API_URL}/api/link-twitter-to-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -830,7 +834,7 @@ function authenticateDiscord() {
     
     // Open Discord OAuth2 in popup
     const popup = window.open(
-        `${BASE_URL}/auth/discord`,
+        `${API_URL}/auth/discord`,
         'discordAuth',
         'width=600,height=700,scrollbars=yes,resizable=yes'
     );
@@ -854,9 +858,9 @@ function authenticateDiscord() {
         console.log('📨 Message data:', event.data);
         console.log('📨 Message type:', event.data?.type);
         
-        if (event.origin !== BASE_URL) {
+        if (event.origin !== BASE_URL && event.origin !== API_URL) {
             console.warn('⚠️ Message from different origin, ignoring');
-            console.warn('⚠️ Expected:', BASE_URL);
+            console.warn('⚠️ Expected:', BASE_URL, 'or', API_URL);
             console.warn('⚠️ Got:', event.origin);
             return;
         }
@@ -1014,7 +1018,7 @@ async function completeWalletTask() {
     }
     
     try {
-        const response = await fetch('/api/submit-wallet', {
+        const response = await fetch(`${API_URL}/api/submit-wallet`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1148,7 +1152,7 @@ async function submitAddress() {
     }
     
     try {
-        const response = await fetch('/api/link-wallet-to-session', {
+        const response = await fetch(`${API_URL}/api/link-wallet-to-session`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1464,7 +1468,7 @@ async function checkAndApplyReferral() {
     
     // Apply referral code
     try {
-        const response = await fetch('/api/apply-referral', {
+        const response = await fetch(`${API_URL}/api/apply-referral`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ discordUserId, referralCode })
@@ -1498,7 +1502,7 @@ async function completeReferral() {
     if (!discordUserId) return;
     
     try {
-        const response = await fetch('/api/complete-referral', {
+        const response = await fetch(`${API_URL}/api/complete-referral`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ discordUserId })
@@ -1797,7 +1801,7 @@ async function verifyTwitterFollow() {
     
     try {
         // Update backend to mark twitter as followed (no actual verification)
-        const response = await fetch('/api/verify-twitter-follow', {
+        const response = await fetch(`${API_URL}/api/verify-twitter-follow`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1928,7 +1932,7 @@ async function verifyDiscordJoin() {
         console.log('🔍 Verifying Discord server join...');
         console.log('🔍 Using Discord provider ID from database:', currentDiscordUserId);
         
-        const response = await fetch('/api/verify-discord-join', {
+        const response = await fetch(`${API_URL}/api/verify-discord-join`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
