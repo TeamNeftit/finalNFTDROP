@@ -313,16 +313,17 @@ async function updateSocialConnection(providerType, providerId, username, email,
 }
 
 // X (Twitter) OAuth2 Routes
-app.get('/auth/x', (req, res) => {
+app.get('/auth/x', async (req, res) => {
     const state = crypto.randomBytes(16).toString('hex');
     const codeVerifier = crypto.randomBytes(32).toString('base64url');
     const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
     
     // Store state and code verifier
-    stateStore.set(state, { 
+    await stateStore.set(state, { 
         timestamp: Date.now(), 
         codeVerifier: codeVerifier 
     });
+    console.log('✅ State stored in Supabase:', state);
     
     console.log('X OAuth2 - Starting authentication flow');
     console.log('Client ID from .env:', X_CLIENT_ID);
@@ -422,7 +423,7 @@ app.get('/auth/x/callback', async (req, res) => {
         `);
     }
     
-    if (!stateStore.has(state)) {
+    if (!(await stateStore.has(state))) {
         console.log('Invalid state parameter');
         return res.status(400).send(`
             <html>
@@ -443,10 +444,13 @@ app.get('/auth/x/callback', async (req, res) => {
     
     try {
         // Get stored code verifier
-        let stateData = stateStore.get(state);
+        let stateData = await stateStore.get(state);
+        console.log('✅ Retrieved state from Supabase:', state);
+        console.log('✅ State data:', stateData);
         if (!stateData || !stateData.codeVerifier) {
             throw new Error('Invalid state or missing code verifier');
         }
+        console.log('✅ Code verifier found:', stateData.codeVerifier);
         
         // Exchange code for access token using URL-encoded form data
         const tokenData = new URLSearchParams({
@@ -503,11 +507,11 @@ app.get('/auth/x/callback', async (req, res) => {
         }
         
         // Store access token for follow verification later
-        stateData = stateStore.get(state);
+        stateData = await stateStore.get(state);
         if (stateData) {
             stateData.accessToken = access_token;
             stateData.userId = userId;
-            stateStore.set(state, stateData);
+            await stateStore.set(state, stateData);
         }
         
         // Smart session management - check if this account is already connected
@@ -709,9 +713,9 @@ app.get('/auth/x/callback', async (req, res) => {
 });
 
 // Discord OAuth2 Routes
-app.get('/auth/discord', (req, res) => {
+app.get('/auth/discord', async (req, res) => {
     const state = crypto.randomBytes(16).toString('hex');
-    stateStore.set(state, { timestamp: Date.now() });
+    await stateStore.set(state, { timestamp: Date.now() });
     
     console.log('Discord OAuth2 - Starting authentication flow');
     console.log('Client ID:', DISCORD_CLIENT_ID);
