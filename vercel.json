@@ -1,27 +1,13 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "server.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "server.js"
+      "source": "/api/(.*)",
+      "destination": "/server.js"
     },
     {
-      "src": "/auth/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json))",
-      "dest": "/dist/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/index.html"
+      "source": "/auth/(.*)",
+      "destination": "/server.js"
     }
   ]
 }
