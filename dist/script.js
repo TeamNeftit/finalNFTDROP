@@ -173,7 +173,7 @@ async function loadSessionFromDiscord(discordUserId) {
     try {
         console.log('🔄 Loading session for Discord ID:', discordUserId);
         
-        const response = await fetch(`/api/session/${discordUserId}`);
+        const response = await fetch(`${API_URL}/api/session/${discordUserId}`);
         const result = await response.json();
         
         if (response.ok && result.success) {
@@ -705,7 +705,7 @@ async function authenticateX() {
         
         // Try to reload session from database
         try {
-            const response = await fetch(`/api/session/${discordUserId}`);
+            const response = await fetch(`${API_URL}/api/session/${discordUserId}`);
             const result = await response.json();
             
             console.log('📊 Database response status:', response.status);
@@ -1345,7 +1345,7 @@ async function loadReferralInfo() {
     
     try {
         console.log('🔍 Loading referral info for user:', discordUserId);
-        const response = await fetch(`/api/referral/${discordUserId}`);
+        const response = await fetch(`${API_URL}/api/referral/${discordUserId}`);
         const data = await response.json();
         
         console.log('📊 Referral data received:', data);
