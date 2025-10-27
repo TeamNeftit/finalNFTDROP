@@ -6,13 +6,21 @@ import { useLocation } from 'react-router-dom';
 function Home() {
   const location = useLocation();
   
-  // Force a full reload when returning to home via browser back/forward
-  // so legacy globals re-run and state/UI are fresh
+  // Force reload when returning to home from another route
+  // This ensures task states, participant count, and referral info are always fresh
   useEffect(() => {
-    const nav = performance.getEntriesByType('navigation')[0];
-    if (location.pathname === '/' && nav && nav.type === 'back_forward') {
-      console.log('🔁 Back/forward navigation to home detected - reloading for fresh state');
-      window.location.reload();
+    // Check if we just navigated to home
+    if (location.pathname === '/') {
+      const wasOnDocsPage = sessionStorage.getItem('wasOnDocsPage');
+      
+      if (wasOnDocsPage === 'true') {
+        console.log('🔁 Returning from docs - reloading for fresh state');
+        sessionStorage.removeItem('wasOnDocsPage');
+        window.location.reload();
+      }
+    } else if (location.pathname.startsWith('/docs')) {
+      // Mark that we're on docs page
+      sessionStorage.setItem('wasOnDocsPage', 'true');
     }
   }, [location.pathname]);
  
