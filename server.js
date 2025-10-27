@@ -2527,9 +2527,15 @@ app.post('/api/complete-referral', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`OAuth server running on port ${PORT}`);
-    console.log(`Base URL: ${BASE_URL}`);
-    console.log(`X OAuth: ${BASE_URL}/auth/x`);
-    console.log(`Discord OAuth: ${BASE_URL}/auth/discord`);
-});
+// Only start server if not in serverless environment
+if (process.env.VERCEL !== '1') {
+    app.listen(PORT, () => {
+        console.log(`OAuth server running on port ${PORT}`);
+        console.log(`Base URL: ${BASE_URL}`);
+        console.log(`X OAuth: ${BASE_URL}/auth/x`);
+        console.log(`Discord OAuth: ${BASE_URL}/auth/discord`);
+    });
+}
+
+// Export for Vercel serverless
+module.exports = app;
