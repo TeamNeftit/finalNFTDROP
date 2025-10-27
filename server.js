@@ -24,7 +24,8 @@ app.use(cors());
 app.use(express.json());
 
 // Configuration - All from .env file
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+// Clean BASE_URL - remove query parameters like ?_vercel_share=...
+const BASE_URL = (process.env.BASE_URL || 'http://localhost:3000').split('?')[0];
 const X_CLIENT_ID = process.env.X_CLIENT_ID;
 const X_CLIENT_SECRET = process.env.X_CLIENT_SECRET;
 const X_REDIRECT_URI = process.env.X_REDIRECT_URI || `${BASE_URL}/auth/x/callback`;

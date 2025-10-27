@@ -105,7 +105,8 @@ async function loadConfig() {
         }
         
         if (config.baseUrl) {
-            BASE_URL = config.baseUrl;
+            // Clean BASE_URL - remove query parameters like ?_vercel_share=...
+            BASE_URL = config.baseUrl.split('?')[0];
             console.log('✅ Loaded base URL from server:', BASE_URL);
         }
         
