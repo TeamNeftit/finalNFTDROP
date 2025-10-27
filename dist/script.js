@@ -1,3 +1,13 @@
+// Debug mode - set to false for production
+const DEBUG_MODE = false;
+
+// Debug logger - only logs if DEBUG_MODE is true
+const debug = {
+    log: (...args) => DEBUG_MODE && debug.log(...args),
+    error: (...args) => console.error(...args), // Always log errors
+    warn: (...args) => DEBUG_MODE && debug.warn(...args)
+};
+
 // Global state for task completion
 let completedTasks = {
     follow: false,
@@ -21,7 +31,7 @@ const API_URL = window.API_BACKEND_URL || window.location.origin;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 NFT Drop page loaded - SCRIPT VERSION 3');
+    debug.log('🚀 NFT Drop page loaded - SCRIPT VERSION 3');
     
     // Don't initialize locks here - let checkExistingConnections handle it
     // This prevents overwriting the restored session state
@@ -39,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('pageshow', function(event) {
     if (event.persisted) {
         // Page was restored from bfcache (back/forward cache)
-        console.log('🔄 Page restored from cache - reloading state...');
+        debug.log('🔄 Page restored from cache - reloading state...');
         loadTaskStates();
         checkExistingConnections();
         loadParticipantCount();
@@ -49,7 +59,7 @@ window.addEventListener('pageshow', function(event) {
 
 // Load participant count from server
 async function loadParticipantCount() {
-    console.log('📊 Loading participant count...');
+    debug.log('📊 Loading participant count...');
     
     const countElement = document.getElementById('total-participants');
     if (!countElement) {
@@ -65,25 +75,25 @@ async function loadParticipantCount() {
             }
         });
         
-        console.log('📊 Response status:', response.status);
-        console.log('📊 Response URL:', response.url);
+        debug.log('📊 Response status:', response.status);
+        debug.log('📊 Response URL:', response.url);
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
-        console.log('📊 Response data:', data);
+        debug.log('📊 Response data:', data);
         
         if (data.success && data.count !== undefined) {
             // Animate the count
             const finalCount = data.count || 0;
-            console.log('✅ Animating count to:', finalCount);
+            debug.log('✅ Animating count to:', finalCount);
             animateCount(countElement, 0, finalCount, 1500);
         } else {
             // Fallback to showing the count even if success is false
             const finalCount = data.count || 0;
-            console.log('⚠️ Using fallback count:', finalCount);
+            debug.log('⚠️ Using fallback count:', finalCount);
             countElement.textContent = finalCount.toLocaleString();
         }
     } catch (error) {
@@ -121,50 +131,50 @@ async function loadConfig() {
             }
         });
         
-        console.log('🔧 Config response status:', response.status);
-        console.log('🔧 Config response URL:', response.url);
+        debug.log('🔧 Config response status:', response.status);
+        debug.log('🔧 Config response URL:', response.url);
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
         const config = await response.json();
-        console.log('🔧 Config loaded:', config);
+        debug.log('🔧 Config loaded:', config);
         
         if (config.discordInviteLink) {
             DISCORD_INVITE_LINK = config.discordInviteLink;
-            console.log('✅ Loaded Discord invite link from server:', DISCORD_INVITE_LINK);
+            debug.log('✅ Loaded Discord invite link from server:', DISCORD_INVITE_LINK);
         }
         
         if (config.discordGuildId) {
             DISCORD_GUILD_ID = config.discordGuildId;
-            console.log('✅ Loaded Discord guild ID from server:', DISCORD_GUILD_ID);
+            debug.log('✅ Loaded Discord guild ID from server:', DISCORD_GUILD_ID);
         }
         
         if (config.baseUrl) {
             // Clean BASE_URL - remove query parameters like ?_vercel_share=...
             BASE_URL = config.baseUrl.split('?')[0];
-            console.log('✅ Loaded base URL from server:', BASE_URL);
+            debug.log('✅ Loaded base URL from server:', BASE_URL);
         }
         
         if (config.neftitUsername) {
             NEFTIT_USERNAME = config.neftitUsername;
-            console.log('✅ Loaded Neftit username from server:', NEFTIT_USERNAME);
+            debug.log('✅ Loaded Neftit username from server:', NEFTIT_USERNAME);
         }
         
         // Clear any cached Discord data to force fresh check
         try {
             await fetch(`${API_URL}/api/discord-clear-cache`, { method: 'POST' });
-            console.log('🧹 Cleared Discord verification cache');
+            debug.log('🧹 Cleared Discord verification cache');
         } catch (error) {
-            console.log('⚠️ Could not clear Discord cache:', error);
+            debug.log('⚠️ Could not clear Discord cache:', error);
         }
     } catch (error) {
         console.error('⚠️ Could not load config from server:', error);
         console.error('⚠️ Error details:', error.message);
-        console.log('⚠️ Using default values');
-        console.log('⚠️ Current BASE_URL:', BASE_URL);
-        console.log('⚠️ Current window.location.origin:', window.location.origin);
+        debug.log('⚠️ Using default values');
+        debug.log('⚠️ Current BASE_URL:', BASE_URL);
+        debug.log('⚠️ Current window.location.origin:', window.location.origin);
     }
 }
 
@@ -183,24 +193,24 @@ async function checkUserStatus() {
 // NEW: Load session from Discord ID
 async function loadSessionFromDiscord(discordUserId) {
     try {
-        console.log('🔄 Loading session for Discord ID:', discordUserId);
+        debug.log('🔄 Loading session for Discord ID:', discordUserId);
         
         const response = await fetch(`${API_URL}/api/session/${discordUserId}`);
         const result = await response.json();
         
         if (response.ok && result.success) {
-            console.log('✅ Session loaded:', result.session);
+            debug.log('✅ Session loaded:', result.session);
             
             const session = result.session;
             
             // Update Discord UI
             if (session.discord_joined) {
-                console.log('✅ Discord is JOINED - showing completed state');
+                debug.log('✅ Discord is JOINED - showing completed state');
                 completedTasks.discord = true;
-                console.log('📝 Set completedTasks.discord = true');
+                debug.log('📝 Set completedTasks.discord = true');
                 updateTaskUI('discord');
                 saveTaskStates();
-                console.log('💾 Saved to localStorage:', JSON.stringify(completedTasks));
+                debug.log('💾 Saved to localStorage:', JSON.stringify(completedTasks));
                 
                 // Hide connect and join, show verify as completed
                 const connectBtn = document.getElementById('discord-connect-btn');
@@ -216,7 +226,7 @@ async function loadSessionFromDiscord(discordUserId) {
                     verifyBtn.style.backgroundColor = '#5d43ef';
                     verifyBtn.style.cursor = 'not-allowed';
                     verifyBtn.style.opacity = '0.7';
-                    console.log('✅ Discord verify button shown as completed');
+                    debug.log('✅ Discord verify button shown as completed');
                 }
                 
                 // Unlock X task
@@ -224,14 +234,14 @@ async function loadSessionFromDiscord(discordUserId) {
                 const xConnectBtn = document.getElementById('twitter-connect-btn');
                 if (xTask) {
                     xTask.classList.remove('locked');
-                    console.log('🔓 X task unlocked');
+                    debug.log('🔓 X task unlocked');
                 }
                 if (xConnectBtn) {
                     xConnectBtn.disabled = false;
-                    console.log('🔓 X connect button enabled');
+                    debug.log('🔓 X connect button enabled');
                 }
             } else if (session.discord_connected) {
-                console.log('🔗 Discord is CONNECTED but not joined - showing join button');
+                debug.log('🔗 Discord is CONNECTED but not joined - showing join button');
                 // Discord connected but not joined yet
                 const connectBtn = document.getElementById('discord-connect-btn');
                 const joinBtn = document.getElementById('discord-join-btn');
@@ -242,7 +252,7 @@ async function loadSessionFromDiscord(discordUserId) {
             // Update X UI
             if (session.twitter_followed) {
                 // User has completed the follow task
-                console.log('✅ Twitter followed - marking X task as completed');
+                debug.log('✅ Twitter followed - marking X task as completed');
                 currentTwitterUserId = discordUserId;
                 localStorage.setItem('currentTwitterUserId', discordUserId);
                 
@@ -264,11 +274,11 @@ async function loadSessionFromDiscord(discordUserId) {
                     verifyBtn.style.backgroundColor = '#5d43ef';
                     verifyBtn.style.cursor = 'not-allowed';
                     verifyBtn.style.opacity = '0.7';
-                    console.log('✅ X verify button shown as completed');
+                    debug.log('✅ X verify button shown as completed');
                 }
             } else if (session.twitter_connected) {
                 // User connected but hasn't followed yet
-                console.log('🔗 Twitter connected but not followed - showing follow button');
+                debug.log('🔗 Twitter connected but not followed - showing follow button');
                 currentTwitterUserId = discordUserId;
                 localStorage.setItem('currentTwitterUserId', discordUserId);
                 
@@ -280,9 +290,9 @@ async function loadSessionFromDiscord(discordUserId) {
                 if (connectBtn) connectBtn.style.display = 'none';
                 if (followBtn) followBtn.style.display = 'inline-block';
                 if (verifyBtn) verifyBtn.style.display = 'none';
-                console.log('✅ Follow button shown');
+                debug.log('✅ Follow button shown');
             } else {
-                console.log('ℹ️ Twitter not connected - showing connect button');
+                debug.log('ℹ️ Twitter not connected - showing connect button');
                 const connectBtn = document.getElementById('twitter-connect-btn');
                 const followBtn = document.getElementById('twitter-follow-btn');
                 const verifyBtn = document.getElementById('twitter-verify-btn');
@@ -293,7 +303,7 @@ async function loadSessionFromDiscord(discordUserId) {
             
             // Update Wallet UI
             if (session.wallet_connected) {
-                console.log('✅ Wallet connected - marking address task as completed');
+                debug.log('✅ Wallet connected - marking address task as completed');
                 completedTasks.address = true;
                 updateTaskUI('address');
                 
@@ -316,19 +326,19 @@ async function loadSessionFromDiscord(discordUserId) {
                     submitBtn.style.cursor = 'not-allowed';
                     submitBtn.style.opacity = '0.7';
                 }
-                console.log('✅ Wallet shown as completed');
+                debug.log('✅ Wallet shown as completed');
             }
             
             // Update task locks based on completion
-            console.log('📊 Session tasks from backend:', session.tasks);
-            console.log('📊 Twitter followed status:', session.twitter_followed);
+            debug.log('📊 Session tasks from backend:', session.tasks);
+            debug.log('📊 Twitter followed status:', session.twitter_followed);
             updateTaskLocks(session.tasks);
             updateProgress();
             saveTaskStates();
             
             return session;
         } else {
-            console.log('ℹ️ No session found for Discord ID');
+            debug.log('ℹ️ No session found for Discord ID');
             // Initialize UI for new user
             updateTaskLocks({
                 discord: 'unlocked',
@@ -345,7 +355,7 @@ async function loadSessionFromDiscord(discordUserId) {
 
 // Update task locks based on completion state
 function updateTaskLocks(tasks) {
-    console.log('🔒 Updating task locks:', tasks);
+    debug.log('🔒 Updating task locks:', tasks);
     
     // Discord is always unlocked (first task)
     const discordTask = document.getElementById('task-discord');
@@ -362,13 +372,13 @@ function updateTaskLocks(tasks) {
         if (xConnectBtn) xConnectBtn.disabled = true;
         if (xFollowBtn) xFollowBtn.disabled = true;
         if (xVerifyBtn) xVerifyBtn.disabled = true;
-        console.log('🔒 X task is LOCKED');
+        debug.log('🔒 X task is LOCKED');
     } else {
         if (xTask) xTask.classList.remove('locked');
         if (xConnectBtn) xConnectBtn.disabled = false;
         if (xFollowBtn) xFollowBtn.disabled = false;
         if (xVerifyBtn) xVerifyBtn.disabled = false;
-        console.log('🔓 X task is UNLOCKED');
+        debug.log('🔓 X task is UNLOCKED');
     }
     
     // Wallet task
@@ -376,18 +386,18 @@ function updateTaskLocks(tasks) {
     const walletInput = document.getElementById('evmAddress');
     const submitBtn = document.querySelector('.submit-button');
     
-    console.log('🔍 Wallet task state:', tasks.wallet);
+    debug.log('🔍 Wallet task state:', tasks.wallet);
     
     if (tasks.wallet === 'locked') {
         if (walletTask) walletTask.classList.add('locked');
         if (walletInput) walletInput.disabled = true;
         if (submitBtn) submitBtn.disabled = true;
-        console.log('🔒 Wallet task is LOCKED');
+        debug.log('🔒 Wallet task is LOCKED');
     } else {
         if (walletTask) walletTask.classList.remove('locked');
         if (walletInput) walletInput.disabled = false;
         if (submitBtn) submitBtn.disabled = false;
-        console.log('🔓 Wallet task is UNLOCKED - state:', tasks.wallet);
+        debug.log('🔓 Wallet task is UNLOCKED - state:', tasks.wallet);
     }
     
     // Update timeline indicators
@@ -441,11 +451,11 @@ async function checkExistingConnections() {
         
         // Check for stored Discord user ID (PRIMARY identifier)
         const storedDiscordUserId = localStorage.getItem('currentDiscordUserId');
-        console.log('🔍 Checking for stored Discord user ID:', storedDiscordUserId);
-        console.log('🔍 Current completedTasks state:', completedTasks);
+        debug.log('🔍 Checking for stored Discord user ID:', storedDiscordUserId);
+        debug.log('🔍 Current completedTasks state:', completedTasks);
         
         if (storedDiscordUserId) {
-            console.log('🔍 Found stored Discord user ID, restoring session...');
+            debug.log('🔍 Found stored Discord user ID, restoring session...');
             currentDiscordUserId = storedDiscordUserId;
             await loadSessionFromDiscord(storedDiscordUserId);
             
@@ -453,11 +463,11 @@ async function checkExistingConnections() {
             await loadReferralInfo();
             
             // Log final state after restoration
-            console.log('✅ Session restoration complete');
-            console.log('📊 Final completedTasks:', completedTasks);
-            console.log('📊 Discord completed?', completedTasks.discord);
+            debug.log('✅ Session restoration complete');
+            debug.log('📊 Final completedTasks:', completedTasks);
+            debug.log('📊 Discord completed?', completedTasks.discord);
         } else {
-            console.log('ℹ️ No stored Discord user ID found - new user');
+            debug.log('ℹ️ No stored Discord user ID found - new user');
             // Lock X and Wallet tasks for new users
             updateTaskLocks({
                 discord: 'unlocked',
@@ -473,7 +483,7 @@ async function checkExistingConnections() {
 // Check user's current status from database
 async function checkUserCurrentStatus(twitterUserId) {
     try {
-        console.log('🔍 Checking user status for Twitter ID:', twitterUserId);
+        debug.log('🔍 Checking user status for Twitter ID:', twitterUserId);
         
         // Add a small delay to ensure database has been updated
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -482,13 +492,13 @@ async function checkUserCurrentStatus(twitterUserId) {
         const result = await response.json();
         
         if (response.ok) {
-            console.log('✅ User status:', result.user);
-            console.log('🔍 Twitter connected:', result.user.twitter_connected);
+            debug.log('✅ User status:', result.user);
+            debug.log('🔍 Twitter connected:', result.user.twitter_connected);
             
             // Update completed tasks based on database status
             if (result.user.twitter_followed) {
                 // User has completed the follow task
-                console.log('✅ Twitter followed - showing completed state');
+                debug.log('✅ Twitter followed - showing completed state');
                 currentTwitterUserId = twitterUserId;
                 localStorage.setItem('currentTwitterUserId', twitterUserId);
                 completedTasks.follow = true;
@@ -510,14 +520,14 @@ async function checkUserCurrentStatus(twitterUserId) {
                     verifyBtn.style.opacity = '0.7';
                 }
             } else if (result.user.twitter_connected) {
-                console.log('✅ Twitter is connected - updating UI');
+                debug.log('✅ Twitter is connected - updating UI');
                 // Store Twitter user ID for later use
                 currentTwitterUserId = twitterUserId;
                 localStorage.setItem('currentTwitterUserId', twitterUserId);
                 // Show the follow button instead of "Connect X"
                 showFollowButton();
             } else {
-                console.log('⚠️ Twitter NOT connected in database - showing connect button');
+                debug.log('⚠️ Twitter NOT connected in database - showing connect button');
                 const connectBtn = document.getElementById('twitter-connect-btn');
                 const followBtn = document.getElementById('twitter-follow-btn');
                 const verifyBtn = document.getElementById('twitter-verify-btn');
@@ -528,7 +538,7 @@ async function checkUserCurrentStatus(twitterUserId) {
             }
             
             if (result.user.discord_connected) {
-                console.log('✅ Discord is connected - updating UI');
+                debug.log('✅ Discord is connected - updating UI');
                 completedTasks.discord = true;
                 updateTaskUI('discord');
                 updateProgress();
@@ -536,7 +546,7 @@ async function checkUserCurrentStatus(twitterUserId) {
             }
             
             if (result.user.wallet_connected) {
-                console.log('✅ Wallet is connected - updating UI');
+                debug.log('✅ Wallet is connected - updating UI');
                 completedTasks.address = true;
                 updateTaskUI('address');
                 updateProgress();
@@ -546,7 +556,7 @@ async function checkUserCurrentStatus(twitterUserId) {
             // Update progress bar
             updateProgress();
         } else {
-            console.log('ℹ️ User not found in database yet');
+            debug.log('ℹ️ User not found in database yet');
         }
     } catch (error) {
         console.error('❌ Error checking user current status:', error);
@@ -556,26 +566,26 @@ async function checkUserCurrentStatus(twitterUserId) {
 // Check user's current status from database by Discord ID
 async function checkUserCurrentStatusByDiscord(discordUserId) {
     try {
-        console.log('🔍 Checking user status for Discord ID:', discordUserId);
+        debug.log('🔍 Checking user status for Discord ID:', discordUserId);
         
         const response = await fetch(`/api/user-status-discord/${discordUserId}`);
         const result = await response.json();
         
         if (response.ok) {
-            console.log('✅ User status:', result.user);
-            console.log('🔍 Discord provider ID from database:', result.user.discord_provider_id);
-            console.log('🔍 Discord connected:', result.user.discord_connected);
+            debug.log('✅ User status:', result.user);
+            debug.log('🔍 Discord provider ID from database:', result.user.discord_provider_id);
+            debug.log('🔍 Discord connected:', result.user.discord_connected);
             
             // Update completed tasks based on database status
             if (result.user.twitter_connected) {
-                console.log('✅ Twitter is connected - updating UI');
+                debug.log('✅ Twitter is connected - updating UI');
                 // Show the follow button instead of "Connect X"
                 showFollowButton();
             }
             
             if (result.user.discord_connected) {
-                console.log('✅ Discord is connected');
-                console.log('🔍 Discord joined status:', result.user.discord_joined);
+                debug.log('✅ Discord is connected');
+                debug.log('🔍 Discord joined status:', result.user.discord_joined);
                 
                 // Store Discord user ID for later verification
                 currentDiscordUserId = discordUserId;
@@ -583,7 +593,7 @@ async function checkUserCurrentStatusByDiscord(discordUserId) {
                 
                 // Only mark as completed if they actually joined the Discord server
                 if (result.user.discord_joined) {
-                    console.log('✅ Discord server joined - marking as completed');
+                    debug.log('✅ Discord server joined - marking as completed');
                     
                     // Mark task as completed
                     completedTasks.discord = true;
@@ -610,9 +620,9 @@ async function checkUserCurrentStatusByDiscord(discordUserId) {
                     const xConnectBtn = document.getElementById('twitter-connect-btn');
                     if (xTask) xTask.classList.remove('locked');
                     if (xConnectBtn) xConnectBtn.disabled = false;
-                    console.log('🔓 X task UNLOCKED after Discord completion');
+                    debug.log('🔓 X task UNLOCKED after Discord completion');
                 } else {
-                    console.log('⚠️ Discord connected but NOT joined server - showing join button');
+                    debug.log('⚠️ Discord connected but NOT joined server - showing join button');
                     
                     // Show join button instead of marking as completed
                     const connectBtn = document.getElementById('discord-connect-btn');
@@ -622,12 +632,12 @@ async function checkUserCurrentStatusByDiscord(discordUserId) {
                     if (connectBtn) connectBtn.style.display = 'none';
                     if (joinBtn) {
                         joinBtn.style.display = 'inline-block';
-                        console.log('✅ Join button is now visible');
+                        debug.log('✅ Join button is now visible');
                     }
                     if (verifyBtn) verifyBtn.style.display = 'none';
                 }
             } else {
-                console.log('⚠️ Discord NOT connected in database - showing connect button');
+                debug.log('⚠️ Discord NOT connected in database - showing connect button');
                 const connectBtn = document.getElementById('discord-connect-btn');
                 const joinBtn = document.getElementById('discord-join-btn');
                 const verifyBtn = document.getElementById('discord-verify-btn');
@@ -638,7 +648,7 @@ async function checkUserCurrentStatusByDiscord(discordUserId) {
             }
             
             if (result.user.wallet_connected) {
-                console.log('✅ Wallet is connected - updating UI');
+                debug.log('✅ Wallet is connected - updating UI');
                 completedTasks.address = true;
                 updateTaskUI('address');
                 updateProgress();
@@ -648,7 +658,7 @@ async function checkUserCurrentStatusByDiscord(discordUserId) {
             // Update progress bar
             updateProgress();
         } else {
-            console.log('ℹ️ User not found in database yet');
+            debug.log('ℹ️ User not found in database yet');
         }
     } catch (error) {
         console.error('❌ Error checking user current status:', error);
@@ -699,10 +709,10 @@ async function authenticateX() {
     const discordUserId = localStorage.getItem('currentDiscordUserId');
     const savedTasks = localStorage.getItem('neftit_tasks');
     
-    console.log('🔍 X OAuth Check - Discord User ID:', discordUserId);
-    console.log('🔍 X OAuth Check - completedTasks.discord:', completedTasks.discord);
-    console.log('🔍 X OAuth Check - Full completedTasks:', completedTasks);
-    console.log('🔍 X OAuth Check - localStorage tasks:', savedTasks);
+    debug.log('🔍 X OAuth Check - Discord User ID:', discordUserId);
+    debug.log('🔍 X OAuth Check - completedTasks.discord:', completedTasks.discord);
+    debug.log('🔍 X OAuth Check - Full completedTasks:', completedTasks);
+    debug.log('🔍 X OAuth Check - localStorage tasks:', savedTasks);
     
     if (!discordUserId) {
         console.error('❌ No Discord user ID in localStorage');
@@ -713,28 +723,28 @@ async function authenticateX() {
     // Check if Discord task is actually completed (joined and verified)
     if (!completedTasks.discord) {
         console.error('❌ Discord task not marked as completed in memory');
-        console.log('💡 Checking database for Discord completion status...');
+        debug.log('💡 Checking database for Discord completion status...');
         
         // Try to reload session from database
         try {
             const response = await fetch(`${API_URL}/api/session/${discordUserId}`);
             const result = await response.json();
             
-            console.log('📊 Database response status:', response.status);
-            console.log('📊 Database response OK:', response.ok);
-            console.log('📊 Database result:', JSON.stringify(result, null, 2));
+            debug.log('📊 Database response status:', response.status);
+            debug.log('📊 Database response OK:', response.ok);
+            debug.log('📊 Database result:', JSON.stringify(result, null, 2));
             
             if (result.session) {
-                console.log('📊 Session exists:', !!result.session);
-                console.log('📊 discord_connected:', result.session.discord_connected);
-                console.log('📊 discord_joined:', result.session.discord_joined);
+                debug.log('📊 Session exists:', !!result.session);
+                debug.log('📊 discord_connected:', result.session.discord_connected);
+                debug.log('📊 discord_joined:', result.session.discord_joined);
             }
             
             if (response.ok && result.success && result.session && result.session.discord_joined) {
-                console.log('✅ Found Discord completion in database, updating UI...');
+                debug.log('✅ Found Discord completion in database, updating UI...');
                 completedTasks.discord = true;
                 saveTaskStates();
-                console.log('💾 Updated completedTasks:', completedTasks);
+                debug.log('💾 Updated completedTasks:', completedTasks);
                 
                 // Update UI
                 const xTask = document.getElementById('task-follow');
@@ -760,8 +770,8 @@ async function authenticateX() {
         }
     }
     
-    console.log('🔍 Discord session found:', discordUserId);
-    console.log('✅ Discord task completed, proceeding with X connection');
+    debug.log('🔍 Discord session found:', discordUserId);
+    debug.log('✅ Discord task completed, proceeding with X connection');
     
     // Open X OAuth2 in popup
     const popup = window.open(
@@ -776,8 +786,8 @@ async function authenticateX() {
         if (event.origin !== BASE_URL && event.origin !== API_URL) return;
         
         if (event.data.type === 'X_AUTH_SUCCESS') {
-            console.log('🎉 X OAuth SUCCESS received');
-            console.log('📊 Event data:', event.data);
+            debug.log('🎉 X OAuth SUCCESS received');
+            debug.log('📊 Event data:', event.data);
             
             const twitterUserId = event.data.userId;
             const twitterUsername = event.data.username || 'unknown';
@@ -799,7 +809,7 @@ async function authenticateX() {
                 const result = await response.json();
                 
                 if (response.ok) {
-                    console.log('✅ Twitter linked to Discord session');
+                    debug.log('✅ Twitter linked to Discord session');
                     showNotification(`X connected! Now follow @${NEFTIT_USERNAME}`, 'success');
                     
                     // Store Twitter user ID
@@ -841,8 +851,8 @@ async function authenticateX() {
 }
 
 function authenticateDiscord() {
-    console.log('🚀 Starting Discord authentication...');
-    console.log('🔍 BASE_URL:', BASE_URL);
+    debug.log('🚀 Starting Discord authentication...');
+    debug.log('🔍 BASE_URL:', BASE_URL);
     
     // Open Discord OAuth2 in popup
     const popup = window.open(
@@ -857,7 +867,7 @@ function authenticateDiscord() {
         return;
     }
     
-    console.log('✅ Popup window opened');
+    debug.log('✅ Popup window opened');
     
     // Listen for popup messages
     const messageListener = async (event) => {
@@ -866,39 +876,39 @@ function authenticateDiscord() {
             return; // Silently ignore MetaMask messages
         }
         
-        console.log('📨 Message received from:', event.origin);
-        console.log('📨 Message data:', event.data);
-        console.log('📨 Message type:', event.data?.type);
+        debug.log('📨 Message received from:', event.origin);
+        debug.log('📨 Message data:', event.data);
+        debug.log('📨 Message type:', event.data?.type);
         
         if (event.origin !== BASE_URL && event.origin !== API_URL) {
-            console.warn('⚠️ Message from different origin, ignoring');
-            console.warn('⚠️ Expected:', BASE_URL, 'or', API_URL);
-            console.warn('⚠️ Got:', event.origin);
+            debug.warn('⚠️ Message from different origin, ignoring');
+            debug.warn('⚠️ Expected:', BASE_URL, 'or', API_URL);
+            debug.warn('⚠️ Got:', event.origin);
             return;
         }
         
         if (event.data.type === 'DISCORD_AUTH_SUCCESS') {
-            console.log('🎉 Discord OAuth SUCCESS received');
-            console.log('📊 Full event data:', JSON.stringify(event.data, null, 2));
-            console.log('📊 User ID:', event.data.userId);
-            console.log('📊 Restored flag:', event.data.restored);
-            console.log('📊 Restored type:', typeof event.data.restored);
+            debug.log('🎉 Discord OAuth SUCCESS received');
+            debug.log('📊 Full event data:', JSON.stringify(event.data, null, 2));
+            debug.log('📊 User ID:', event.data.userId);
+            debug.log('📊 Restored flag:', event.data.restored);
+            debug.log('📊 Restored type:', typeof event.data.restored);
             
             // Store Discord user ID immediately
             currentDiscordUserId = event.data.userId;
             localStorage.setItem('currentDiscordUserId', event.data.userId);
-            console.log('💾 Stored Discord user ID to localStorage:', event.data.userId);
+            debug.log('💾 Stored Discord user ID to localStorage:', event.data.userId);
             
             // Check for pending referral code
             const pendingReferralCode = localStorage.getItem('pending_referral_code');
             if (pendingReferralCode) {
-                console.log('🔍 Found pending referral code, applying now...');
+                debug.log('🔍 Found pending referral code, applying now...');
                 await checkAndApplyReferral();
             }
             
             // Check if this is a restored session
             if (event.data.restored === true) {
-                console.log('🔄 RESTORED SESSION - loading full state from database...');
+                debug.log('🔄 RESTORED SESSION - loading full state from database...');
                 showNotification('Discord session restored!', 'success');
                 
                 // Load complete session state from database
@@ -907,8 +917,8 @@ function authenticateDiscord() {
                 // Load referral info
                 await loadReferralInfo();
             } else {
-                console.log('✨ NEW DISCORD CONNECTION - showing join button');
-                console.log('📊 Restored value was:', event.data.restored);
+                debug.log('✨ NEW DISCORD CONNECTION - showing join button');
+                debug.log('📊 Restored value was:', event.data.restored);
                 showNotification('Discord connected! Now join the server.', 'success');
                 
                 // New connection - show join button
@@ -916,45 +926,45 @@ function authenticateDiscord() {
                 const joinBtn = document.getElementById('discord-join-btn');
                 const verifyBtn = document.getElementById('discord-verify-btn');
                 
-                console.log('🔍 Button elements:', {
+                debug.log('🔍 Button elements:', {
                     connectBtn: !!connectBtn,
                     joinBtn: !!joinBtn,
                     verifyBtn: !!verifyBtn
                 });
                 
-                console.log('🔄 Updating button visibility...');
+                debug.log('🔄 Updating button visibility...');
                 if (connectBtn) {
                     connectBtn.style.display = 'none';
-                    console.log('✅ Connect button hidden');
+                    debug.log('✅ Connect button hidden');
                 } else {
                     console.error('❌ Connect button not found!');
                 }
                 
                 if (joinBtn) {
                     joinBtn.style.display = 'inline-block';
-                    console.log('✅ Join button shown');
-                    console.log('📊 Join button display:', joinBtn.style.display);
+                    debug.log('✅ Join button shown');
+                    debug.log('📊 Join button display:', joinBtn.style.display);
                 } else {
                     console.error('❌ Join button not found in DOM!');
                 }
                 
                 if (verifyBtn) {
                     verifyBtn.style.display = 'none';
-                    console.log('✅ Verify button hidden');
+                    debug.log('✅ Verify button hidden');
                 }
             }
             
-            console.log('🔄 Closing popup and removing listener...');
+            debug.log('🔄 Closing popup and removing listener...');
             popup.close();
             window.removeEventListener('message', messageListener);
-            console.log('✅ Discord authentication flow completed');
+            debug.log('✅ Discord authentication flow completed');
         } else if (event.data.type === 'DISCORD_AUTH_ERROR') {
             console.error('❌ Discord auth error:', event.data.error);
             showNotification(event.data.error || 'Discord authentication failed', 'error');
             popup.close();
             window.removeEventListener('message', messageListener);
         } else {
-            console.log('📨 Unknown message type:', event.data.type);
+            debug.log('📨 Unknown message type:', event.data.type);
         }
     };
     
@@ -988,7 +998,7 @@ function connectMetaMask() {
     if (typeof window.ethereum !== 'undefined') {
         window.ethereum.request({ method: 'eth_requestAccounts' })
             .then(accounts => {
-                console.log('Connected to MetaMask:', accounts[0]);
+                debug.log('Connected to MetaMask:', accounts[0]);
                 completeWalletTask();
             })
             .catch(error => {
@@ -1067,7 +1077,7 @@ function updateTaskUI(taskType) {
     const taskItem = document.getElementById(`task-${taskType}`);
     
     if (!taskItem) {
-        console.log('Task element not found for:', taskType);
+        debug.log('Task element not found for:', taskType);
         return;
     }
     
@@ -1131,7 +1141,7 @@ function updateTaskUI(taskType) {
 async function submitAddress() {
     // Check if task is already completed
     if (completedTasks.address) {
-        console.log('⚠️ Wallet task already completed, ignoring click');
+        debug.log('⚠️ Wallet task already completed, ignoring click');
         return;
     }
     
@@ -1351,19 +1361,19 @@ window.onclick = function(event) {
 async function loadReferralInfo() {
     const discordUserId = localStorage.getItem('currentDiscordUserId');
     if (!discordUserId) {
-        console.log('ℹ️ No Discord user ID - cannot load referral info');
+        debug.log('ℹ️ No Discord user ID - cannot load referral info');
         return;
     }
     
     try {
-        console.log('🔍 Loading referral info for user:', discordUserId);
+        debug.log('🔍 Loading referral info for user:', discordUserId);
         const response = await fetch(`${API_URL}/api/referral/${discordUserId}`);
         const data = await response.json();
         
-        console.log('📊 Referral data received:', data);
-        console.log('📊 Has completed all tasks?', data.hasCompletedAllTasks);
-        console.log('📊 Referral code:', data.referralCode);
-        console.log('📊 Referral link:', data.referralLink);
+        debug.log('📊 Referral data received:', data);
+        debug.log('📊 Has completed all tasks?', data.hasCompletedAllTasks);
+        debug.log('📊 Referral code:', data.referralCode);
+        debug.log('📊 Referral link:', data.referralLink);
         
         if (data.success && data.hasCompletedAllTasks) {
             // Show referral link
@@ -1377,8 +1387,8 @@ async function loadReferralInfo() {
             if (referralInput) referralInput.value = data.referralLink;
             if (referralCountValue) referralCountValue.textContent = data.referralCount;
             
-            console.log('✅ Referral link unlocked:', data.referralLink);
-            console.log('📊 Referral count:', data.referralCount);
+            debug.log('✅ Referral link unlocked:', data.referralLink);
+            debug.log('📊 Referral count:', data.referralCount);
         } else {
             // Keep locked
             const referralContent = document.getElementById('referral-content');
@@ -1387,7 +1397,7 @@ async function loadReferralInfo() {
             if (referralContent) referralContent.style.display = 'none';
             if (referralLocked) referralLocked.style.display = 'block';
             
-            console.log('🔒 Referral link locked - complete all tasks first');
+            debug.log('🔒 Referral link locked - complete all tasks first');
         }
     } catch (error) {
         console.error('❌ Error loading referral info:', error);
@@ -1418,7 +1428,7 @@ async function copyReferralLink() {
             copyBtn.style.backgroundColor = '';
         }, 2000);
         
-        console.log('✅ Referral link copied:', referralInput.value);
+        debug.log('✅ Referral link copied:', referralInput.value);
     } catch (error) {
         console.error('❌ Error copying to clipboard:', error);
         
@@ -1454,7 +1464,7 @@ I am in already…. Claim yours before it disappears!
     // Open in new window
     window.open(twitterUrl, '_blank', 'width=550,height=420');
     
-    console.log('✅ Opening Twitter share with referral link:', referralLink);
+    debug.log('✅ Opening Twitter share with referral link:', referralLink);
 }
 
 async function checkAndApplyReferral() {
@@ -1463,18 +1473,18 @@ async function checkAndApplyReferral() {
     const referralCode = urlParams.get('ref');
     
     if (!referralCode) {
-        console.log('ℹ️ No referral code in URL');
+        debug.log('ℹ️ No referral code in URL');
         return;
     }
     
-    console.log('🔍 Found referral code in URL:', referralCode);
+    debug.log('🔍 Found referral code in URL:', referralCode);
     
     // Check if user already has Discord connected
     const discordUserId = localStorage.getItem('currentDiscordUserId');
     if (!discordUserId) {
         // Store referral code for later
         localStorage.setItem('pending_referral_code', referralCode);
-        console.log('💾 Stored referral code for later application');
+        debug.log('💾 Stored referral code for later application');
         return;
     }
     
@@ -1488,17 +1498,17 @@ async function checkAndApplyReferral() {
         
         const data = await response.json();
         
-        console.log('📊 Apply referral response:', data);
+        debug.log('📊 Apply referral response:', data);
         
         if (response.ok && data.success) {
-            console.log('✅ Referral code applied successfully');
+            debug.log('✅ Referral code applied successfully');
             showNotification('Referral code applied! Complete all tasks to count.', 'success');
             localStorage.removeItem('pending_referral_code');
             
             // Remove ref from URL
             window.history.replaceState({}, document.title, window.location.pathname);
         } else {
-            console.log('⚠️ Referral code application failed:', data.error || data.details);
+            debug.log('⚠️ Referral code application failed:', data.error || data.details);
             if (data.error !== 'User already has a referrer') {
                 showNotification(data.error || 'Failed to apply referral code', 'error');
             }
@@ -1523,7 +1533,7 @@ async function completeReferral() {
         const data = await response.json();
         
         if (data.success) {
-            console.log('✅ Referral completed - referrer count updated');
+            debug.log('✅ Referral completed - referrer count updated');
         }
     } catch (error) {
         console.error('❌ Error completing referral:', error);
@@ -1544,43 +1554,43 @@ window.copyReferralLink = copyReferralLink;
 window.shareOnX = shareOnX;
 window.connectMetaMask = connectMetaMask;
 
-console.log('✅ Global functions exposed to window object');
+debug.log('✅ Global functions exposed to window object');
 
 // Add direct event listeners as fallback for React buttons
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 Setting up direct event listeners for buttons...');
+    debug.log('🔧 Setting up direct event listeners for buttons...');
     
     // X button
     const xBtn = document.getElementById('twitter-connect-btn');
     if (xBtn) {
         xBtn.addEventListener('click', function(e) {
-            console.log('🖱️ X button clicked via direct listener');
+            debug.log('🖱️ X button clicked via direct listener');
             if (!this.disabled) {
                 window.authenticateX();
             } else {
-                console.log('⚠️ Button is disabled');
+                debug.log('⚠️ Button is disabled');
             }
         });
-        console.log('✅ X button listener attached');
+        debug.log('✅ X button listener attached');
     }
     
     // Discord button
     const discordBtn = document.getElementById('discord-connect-btn');
     if (discordBtn) {
         discordBtn.addEventListener('click', function(e) {
-            console.log('🖱️ Discord button clicked via direct listener');
+            debug.log('🖱️ Discord button clicked via direct listener');
             if (!this.disabled) {
                 window.authenticateDiscord();
             }
         });
-        console.log('✅ Discord button listener attached');
+        debug.log('✅ Discord button listener attached');
     }
     
     // Follow button
     const followBtn = document.getElementById('twitter-follow-btn');
     if (followBtn) {
         followBtn.addEventListener('click', function(e) {
-            console.log('🖱️ Follow button clicked via direct listener');
+            debug.log('🖱️ Follow button clicked via direct listener');
             window.followTwitter();
         });
     }
@@ -1589,7 +1599,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const verifyTwitterBtn = document.getElementById('twitter-verify-btn');
     if (verifyTwitterBtn) {
         verifyTwitterBtn.addEventListener('click', function(e) {
-            console.log('🖱️ Verify Twitter button clicked via direct listener');
+            debug.log('🖱️ Verify Twitter button clicked via direct listener');
             window.verifyTwitterFollow();
         });
     }
@@ -1598,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const joinDiscordBtn = document.getElementById('discord-join-btn');
     if (joinDiscordBtn) {
         joinDiscordBtn.addEventListener('click', function(e) {
-            console.log('🖱️ Join Discord button clicked via direct listener');
+            debug.log('🖱️ Join Discord button clicked via direct listener');
             window.joinDiscordServer();
         });
     }
@@ -1607,7 +1617,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const verifyDiscordBtn = document.getElementById('discord-verify-btn');
     if (verifyDiscordBtn) {
         verifyDiscordBtn.addEventListener('click', function(e) {
-            console.log('🖱️ Verify Discord button clicked via direct listener');
+            debug.log('🖱️ Verify Discord button clicked via direct listener');
             window.verifyDiscordJoin();
         });
     }
@@ -1616,14 +1626,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('wallet-submit-btn');
     if (submitBtn) {
         submitBtn.addEventListener('click', function(e) {
-            console.log('🖱️ Submit button clicked via direct listener');
+            debug.log('🖱️ Submit button clicked via direct listener');
             if (!this.disabled) {
                 window.submitAddress();
             }
         });
     }
     
-    console.log('✅ All direct event listeners attached');
+    debug.log('✅ All direct event listeners attached');
 });
 
 // Add some interactive effects
@@ -1723,7 +1733,7 @@ if (logoElement) {
 
 // Add analytics tracking (placeholder)
 function trackEvent(eventName, properties = {}) {
-    console.log('Event tracked:', eventName, properties);
+    debug.log('Event tracked:', eventName, properties);
     // Here you would integrate with your analytics service
     // Example: gtag('event', eventName, properties);
 }
@@ -1757,28 +1767,28 @@ submitAddress = function() {
 
 // Show follow button after X connection
 function showFollowButton() {
-    console.log('🔄 Showing follow button...');
+    debug.log('🔄 Showing follow button...');
     const connectBtn = document.getElementById('twitter-connect-btn');
     const followBtn = document.getElementById('twitter-follow-btn');
     const verifyBtn = document.getElementById('twitter-verify-btn');
     
     if (connectBtn) {
         connectBtn.style.display = 'none';
-        console.log('✅ Connect button hidden');
+        debug.log('✅ Connect button hidden');
     }
     if (followBtn) {
         followBtn.style.display = 'inline-block';
-        console.log('✅ Follow button shown');
+        debug.log('✅ Follow button shown');
     }
     if (verifyBtn) {
         verifyBtn.style.display = 'none';
-        console.log('✅ Verify button hidden');
+        debug.log('✅ Verify button hidden');
     }
 }
 
 // Simplified Twitter follow function
 function followTwitter() {
-    console.log('🔗 Opening Twitter follow link...');
+    debug.log('🔗 Opening Twitter follow link...');
     const followUrl = `https://twitter.com/intent/follow?screen_name=${NEFTIT_USERNAME}`;
     window.open(followUrl, '_blank');
     
@@ -1796,7 +1806,7 @@ function followTwitter() {
 async function verifyTwitterFollow() {
     // Check if task is already completed
     if (completedTasks.follow) {
-        console.log('⚠️ Twitter task already completed, ignoring click');
+        debug.log('⚠️ Twitter task already completed, ignoring click');
         return;
     }
     
@@ -1806,7 +1816,7 @@ async function verifyTwitterFollow() {
         verifyBtn.disabled = true;
     }
     
-    console.log('🔍 Verifying Twitter follow...');
+    debug.log('🔍 Verifying Twitter follow...');
     
     // Show loading for 1.5 seconds
     await new Promise(resolve => setTimeout(resolve, 1500));
@@ -1825,7 +1835,7 @@ async function verifyTwitterFollow() {
         
         if (response.ok && result.success) {
             // Mark as completed
-            console.log('✅ Twitter follow verified!');
+            debug.log('✅ Twitter follow verified!');
             completedTasks.follow = true;
             updateTaskUI('follow');
             updateProgress();
@@ -1849,10 +1859,10 @@ async function verifyTwitterFollow() {
             if (walletTask) walletTask.classList.remove('locked');
             if (walletInput) walletInput.disabled = false;
             if (submitBtn) submitBtn.disabled = false;
-            console.log('🔓 Wallet task UNLOCKED after Twitter verification');
+            debug.log('🔓 Wallet task UNLOCKED after Twitter verification');
         } else {
             // If API fails, still complete it (no actual verification needed)
-            console.log('⚠️ API failed but completing anyway (no verification needed)');
+            debug.log('⚠️ API failed but completing anyway (no verification needed)');
             completedTasks.follow = true;
             updateTaskUI('follow');
             updateProgress();
@@ -1878,7 +1888,7 @@ async function verifyTwitterFollow() {
         }
     } catch (error) {
         // Even if error, complete it (no actual verification needed)
-        console.log('⚠️ Error but completing anyway (no verification needed):', error);
+        debug.log('⚠️ Error but completing anyway (no verification needed):', error);
         completedTasks.follow = true;
         updateTaskUI('follow');
         updateProgress();
@@ -1913,7 +1923,7 @@ async function verifyTwitterFollow() {
 
 // Discord server joining functions
 function joinDiscordServer() {
-    console.log('🔗 Opening Discord server invite...');
+    debug.log('🔗 Opening Discord server invite...');
     window.open(DISCORD_INVITE_LINK, '_blank');
     
     // Show verify button after a short delay
@@ -1941,8 +1951,8 @@ async function verifyDiscordJoin() {
     }
     
     try {
-        console.log('🔍 Verifying Discord server join...');
-        console.log('🔍 Using Discord provider ID from database:', currentDiscordUserId);
+        debug.log('🔍 Verifying Discord server join...');
+        debug.log('🔍 Using Discord provider ID from database:', currentDiscordUserId);
         
         const response = await fetch(`${API_URL}/api/verify-discord-join`, {
             method: 'POST',
@@ -1958,7 +1968,7 @@ async function verifyDiscordJoin() {
         const data = await response.json();
         
         if (response.ok && data.success && data.isMember) {
-            console.log('✅ Discord join verified!');
+            debug.log('✅ Discord join verified!');
             showNotification('Discord join verified! Task completed.', 'success');
             
             // Update UI immediately
@@ -1986,27 +1996,27 @@ async function verifyDiscordJoin() {
             const xConnectBtn = document.getElementById('twitter-connect-btn');
             if (xTask) xTask.classList.remove('locked');
             if (xConnectBtn) xConnectBtn.disabled = false;
-            console.log('🔓 X task UNLOCKED after Discord verification');
+            debug.log('🔓 X task UNLOCKED after Discord verification');
             
             // Show member data if available
             if (data.memberData && data.memberData.username) {
-                console.log(`👋 Welcome, ${data.memberData.username}!`);
+                debug.log(`👋 Welcome, ${data.memberData.username}!`);
             }
             
             // Refresh user status to get updated database state
-            console.log('🔄 Refreshing user status after Discord verification...');
+            debug.log('🔄 Refreshing user status after Discord verification...');
             if (currentDiscordUserId) {
                 await checkUserCurrentStatusByDiscord(currentDiscordUserId);
             }
         } else if (response.status === 429) {
-            console.log('⚠️ Rate limited by Discord API');
+            debug.log('⚠️ Rate limited by Discord API');
             showNotification(`Rate limited. Please try again in ${data.retryAfter || 5} seconds.`, 'warning');
             if (verifyBtn) {
                 verifyBtn.innerHTML = '<span class="button-text">Try Again</span>';
                 verifyBtn.disabled = false;
             }
         } else if (data.needsSetup) {
-            console.log('❌ Discord bot setup required');
+            debug.log('❌ Discord bot setup required');
             showNotification('Discord bot setup required. Please contact administrator.', 'error');
             if (verifyBtn) {
                 verifyBtn.innerHTML = '<span class="button-text">Setup Required</span>';
@@ -2014,7 +2024,7 @@ async function verifyDiscordJoin() {
                 verifyBtn.style.backgroundColor = '#ef4444';
             }
         } else if (data.cached) {
-            console.log('📋 Using cached Discord result');
+            debug.log('📋 Using cached Discord result');
             showNotification('Discord verification (cached result)', 'info');
             
             // Still update UI if cached result shows success

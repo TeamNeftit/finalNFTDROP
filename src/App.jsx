@@ -5,6 +5,12 @@ import { useEffect, useState } from 'react'
 import DocsRoutes from "./pages/DocsRoutes";
 import { DocsNavigationProvider } from "./contexts/DocsNavigationContext";
 
+// Debug mode - set to false for production
+const DEBUG_MODE = false;
+const debug = {
+  log: (...args) => DEBUG_MODE && console.log(...args)
+};
+
 function AppContent() {
   const location = useLocation();
   const isDocsPage = location.pathname.startsWith('/docs');
@@ -15,7 +21,7 @@ function AppContent() {
     if (location.pathname === '/') {
       const wasOnDocs = sessionStorage.getItem('wasOnDocs');
       if (wasOnDocs === 'true') {
-        console.log('🔄 Returning from docs - forcing reload');
+        debug.log('🔄 Returning from docs - forcing reload');
         sessionStorage.removeItem('wasOnDocs');
         // Force full page reload to ensure all state is fresh
         window.location.reload();
