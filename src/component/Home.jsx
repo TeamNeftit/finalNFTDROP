@@ -1,29 +1,8 @@
 import './Home.css'
 import { useState, useEffect } from 'react';
 import { Info, Copy } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
 
 function Home() {
-  const location = useLocation();
-  
-  // Force reload when returning to home from another route
-  // This ensures task states, participant count, and referral info are always fresh
-  useEffect(() => {
-    // Check if we just navigated to home
-    if (location.pathname === '/') {
-      const wasOnDocsPage = sessionStorage.getItem('wasOnDocsPage');
-      
-      if (wasOnDocsPage === 'true') {
-        console.log('🔁 Returning from docs - reloading for fresh state');
-        sessionStorage.removeItem('wasOnDocsPage');
-        window.location.reload();
-      }
-    } else if (location.pathname.startsWith('/docs')) {
-      // Mark that we're on docs page
-      sessionStorage.setItem('wasOnDocsPage', 'true');
-    }
-  }, [location.pathname]);
- 
   // Helper to call legacy globals safely
   const call = (fn) => () => {
     if (typeof window[fn] === 'function') {
