@@ -1453,7 +1453,8 @@ function shareOnX() {
 👉 ${referralLink}
 
 I am in already…. Claim yours before it disappears!
-#web3 drops like this don't happen every day!`;
+#web3 drops like this don't happen every day!
+https://x.com/neftitxyz/status/1983062242196177289`;
     
     // Encode the tweet text for URL
     const encodedTweet = encodeURIComponent(tweetText);
