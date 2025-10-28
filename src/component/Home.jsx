@@ -106,8 +106,8 @@ function Home() {
           </div>
         </div>
 
-         {/* Participant Counter */}
-        <div className="participant-counter">
+         {/* Participant Counter - TEMPORARILY HIDDEN */}
+        {/* <div className="participant-counter">
           <div className="participant-avatars">
             <div className="avatar-circle">
               <img src="/pfps/profileimg1.jpg" alt="Participant 1" />
@@ -128,7 +128,7 @@ function Home() {
           <div className="participant-count">
             <span id="total-participants">0</span> participants joined
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="refer" id="referral-section">
