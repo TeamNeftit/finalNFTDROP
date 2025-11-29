@@ -957,46 +957,36 @@
 .home-main {
     position: relative;
     z-index: 1;
-    height: 150vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-image: url('/images/waitlistBg.png');
+    background-image: url('/images/LandingPageImage.jpeg');
     background-size: cover;
     background-position: center;
 }
 
  .strip {
   position: absolute;
-  width: 100%; /* long enough to cover the screen diagonally */
-  height: 50px; /* thickness of the strip */
-  opacity: 0.9;
+  width: 100vw; /* long enough to cover the screen diagonally */
+  height: 60px; /* thickness of the strip */
+  top: 45%;
+  right: 0%;
   box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
   z-index: -1;
 }
 
-/* 1️⃣ Horizontal strip (left to right) */
-.strip1 {
-  top: 3%;
-  left: -5%;
-  transform: rotate(-10deg);
-  opacity: 0.5;
-  background: url("/images/claimNftWhite.gif");
-}
-
 /* 2️⃣ Right → Left diagonal (60° angle downward) */
-.strip2 {
-  top: 90%;
-  right: -10%;
-  transform: rotate(-10deg);
-  opacity: 0.8;
-  background: url("/images/waitlistClosedBlue.gif");
+.stripImage {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
 }
 
 @media (max-width: 426px) {
     .home-main {
-        height: 165vh;
+        height: 100vh;
         background-image: none;
         padding: 20px 0;
     }
@@ -1211,7 +1201,7 @@
 
 @media (min-width: 427px) and (max-width: 769px) {
     .home-main {
-        height: 155vh;
+        height: 100vh;
     }
 
     .logoContainer{
