@@ -987,7 +987,7 @@
 @media (max-width: 426px) {
     .home-main {
         height: 100vh;
-        background-image: none;
+        background-image: url('/images/WebsiteCover.jpg');
         padding: 20px 0;
     }
 
